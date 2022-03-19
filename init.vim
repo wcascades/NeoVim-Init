@@ -20,6 +20,7 @@ Plug 'scrooloose/nerdtree'
 Plug 'jiangmiao/auto-pairs'
 Plug 'nvim-lualine/lualine.nvim'
 Plug 'mhinz/vim-startify'
+Plug 'wcascades/ssgn'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'junegunn/fzf', { 'do' : { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
@@ -40,6 +41,10 @@ map <leader>h :wincmd h<CR>
 map <leader>j :wincmd j<CR>
 map <leader>k :wincmd k<CR>
 map <leader>l :wincmd l<CR>
+
+map <leader>tn :SSGNEditGitNote <CR>
+map <leader>tm :SSGNEditMainNote <CR>
+let g:SSGNMainNoteLocation = "~/todo.txt"
 
 " Allows for reuse of yanked text
 xnoremap <leader>p "_dP
@@ -85,3 +90,17 @@ require('lualine').setup {
 }
 require('lualine').setup()
 END
+
+" use <tab> for trigger completion and navigate to the next complete item
+function! s:check_back_space() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~ '\s'
+endfunction
+
+inoremap <silent><expr> <Tab>
+      \ pumvisible() ? "\<C-n>" :
+      \ <SID>check_back_space() ? "\<Tab>" :
+      \ coc#refresh()
+
+inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
+inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
