@@ -5,6 +5,8 @@ set ignorecase " ignore case for searches by default
 set mouse=a
 syntax on
 let mapleader = " "
+" v-- this needs to be loaded BEFORE plugins
+let g:ale_disable_lsp = 1
 " ----------------------
 " Auto vim-plug install
 let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
@@ -14,19 +16,26 @@ if empty(glob(data_dir . '/autoload/plug.vim'))
 endif
 "-----------------------
 call plug#begin(stdpath('data') . '/plugged')
-Plug 'morhetz/gruvbox'
 Plug 'dracula/vim'
-Plug 'scrooloose/nerdtree'
 Plug 'jiangmiao/auto-pairs'
-Plug 'nvim-lualine/lualine.nvim'
-Plug 'mhinz/vim-startify'
-Plug 'wcascades/ssgn'
-Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'junegunn/fzf', { 'do' : { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'kyazdani42/nvim-web-devicons'
+Plug 'mhinz/vim-startify'
+Plug 'dense-analysis/ale'
+Plug 'morhetz/gruvbox'
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'nvim-lualine/lualine.nvim'
+Plug 'omniSharp/omnisharp-vim'
+Plug 'scrooloose/nerdtree'
+Plug 'wcascades/ssgn'
 call plug#end()
-
+let g:OmniSharp_server_use_net6 = 1
+let g:OmniSharp_selector_ui = 'fzf'
+let g:OmniSharp_selector_findusages = 'fzf'
+let g:ale_linters = {
+\ 'cs': ['OmniSharp']
+\}
 map <leader>o :NERDTreeToggle<CR>
 map <leader>O :NERDTreeFind<CR>
 map <leader>s :w<CR>
