@@ -20,14 +20,16 @@ Plug 'dracula/vim'
 Plug 'jiangmiao/auto-pairs'
 Plug 'junegunn/fzf', { 'do' : { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
+Plug 'lambdalisue/fern.vim'
 Plug 'kyazdani42/nvim-web-devicons'
 Plug 'mhinz/vim-startify'
 Plug 'dense-analysis/ale'
+Plug 'nvim-treesitter/nvim-treesitter'
+Plug 'nvim-orgmode/orgmode'
 Plug 'morhetz/gruvbox'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'nvim-lualine/lualine.nvim'
 Plug 'omniSharp/omnisharp-vim'
-Plug 'scrooloose/nerdtree'
 Plug 'wcascades/ssgn'
 call plug#end()
 let g:OmniSharp_server_use_net6 = 1
@@ -36,28 +38,25 @@ let g:OmniSharp_selector_findusages = 'fzf'
 let g:ale_linters = {
 \ 'cs': ['OmniSharp']
 \}
-map <leader>o :NERDTreeToggle<CR>
-map <leader>O :NERDTreeFind<CR>
+map <leader>b :Buffers<CR>
+map <leader>O :Fern .<CR>
 map <leader>s :w<CR>
 vnoremap <C-c> "+y
-inoremap <C-v> <C-r>+
+imap <C-v> <C-r>+
 nmap <leader>gd <Plug>(coc-definition)
 nmap <leader>gr <Plug>(coc-references)
 nnoremap <C-p> :GFiles<CR>
 map <leader>p <C-p>
-
 map <leader>h :wincmd h<CR>
 map <leader>j :wincmd j<CR>
 map <leader>k :wincmd k<CR>
 map <leader>l :wincmd l<CR>
-
 map <leader>tn :SSGNEditGitNote <CR>
 map <leader>tm :SSGNEditMainNote <CR>
 let g:SSGNMainNoteLocation = "~/todo.txt"
 
 " Allows for reuse of yanked text
 xnoremap <leader>p "_dP
-
 filetype plugin indent on
 " show existing tab with 4 spaces width
 set tabstop=4
@@ -68,7 +67,8 @@ set expandtab
 colorscheme gruvbox
 hi Normal ctermbg=NONE
 
-lua << END
+lua << EOF
+require 'nvim-treesitter.install'.compilers = { "clang" }
 require('lualine').setup {
   options = {
     icons_enabled = true,
@@ -98,8 +98,59 @@ require('lualine').setup {
   extensions = {}
 }
 require('lualine').setup()
-END
+-- Load custom tree-sitter grammar for org filetype
+require('orgmode').setup_ts_grammar()
 
+-- Tree-sitter configuration
+require'nvim-treesitter.configs'.setup {
+    -- If TS highlights are not enabled at all, or disabled via `disable` prop, highlighting will fallback to default Vim syntax highlighting
+    highlight = {
+        enable = true,
+        disable = {'org'}, -- Remove this to use TS highlighter for some of the highlights (Experimental)
+        additional_vim_regex_highlighting = {'org'}, -- Required since TS highlighter doesn't support all syntax features (conceal)
+    },
+    ensure_installed = {'org'}, -- Or run :TSUpdate org
+}
+
+require('orgmode').setup{
+    org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
+    org_default_notes_file = '~/Dropbox/org/refile.org',
+}
+EOF
+
+" FZF Config
+let g:fzf_tags_command = 'ctags -R'
+let g:fzf_layout = {'up':'~90%', 'window': { 'width': 0.8, 'height': 0.8,'yoffset':0.5,'xoffset': 0.5, 'highlight': 'Todo', 'border': 'sharp' } }
+let $FZF_DEFAULT_OPTS = '--layout=reverse --info=inline'
+let $FZF_DEFAULT_COMMAND="rg --files --hidden"
+""Get Files
+command! -bang -nargs=? -complete=dir Files
+    \ call fzf#vim#files(<q-args>, fzf#vim#with_preview({'options': ['--layout=reverse', '--info=inline']}), <bang>0)
+
+
+" Get text in files with Rg
+command! -bang -nargs=* Rg
+  \ call fzf#vim#grep(
+  \   'rg --column --line-number --no-heading --color=always --smart-case '.shellescape(<q-args>), 1,
+  \   fzf#vim#with_preview(), <bang>0)
+
+" Ripgrep advanced
+function! RipgrepFzf(query, fullscreen)
+  let command_fmt = 'rg --column --line-number --no-heading --color=always --smart-case %s || true'
+  let initial_command = printf(command_fmt, shellescape(a:query))
+  let reload_command = printf(command_fmt, '{q}')
+  let spec = {'options': ['--phony', '--query', a:query, '--bind', 'change:reload:'.reload_command]}
+  call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(spec), a:fullscreen)
+endfunction
+
+command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)
+
+" Git grep
+command! -bang -nargs=* GGrep
+  \ call fzf#vim#grep(
+  \   'git grep --line-number '.shellescape(<q-args>), 0,
+  \   fzf#vim#with_preview({'dir': systemlist('git rev-parse --show-toplevel')[0]}), <bang>0)
+"""""""""""""
 " use <tab> for trigger completion and navigate to the next complete item
 function! s:check_back_space() abort
   let col = col('.') - 1
@@ -113,3 +164,4 @@ inoremap <silent><expr> <Tab>
 
 inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+
