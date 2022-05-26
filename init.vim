@@ -3,7 +3,6 @@ set relativenumber
 set noswapfile
 set ignorecase " ignore case for searches by default
 set mouse=a
-set shell=pwsh
 syntax on
 " v-- this needs to be loaded BEFORE plugins
 let g:ale_disable_lsp = 1
