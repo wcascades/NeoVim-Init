@@ -3,8 +3,8 @@ set relativenumber
 set noswapfile
 set ignorecase " ignore case for searches by default
 set mouse=a
+set shell=pwsh
 syntax on
-let mapleader = " "
 " v-- this needs to be loaded BEFORE plugins
 let g:ale_disable_lsp = 1
 " ----------------------
@@ -16,20 +16,24 @@ if empty(glob(data_dir . '/autoload/plug.vim'))
 endif
 "-----------------------
 call plug#begin(stdpath('data') . '/plugged')
+Plug 'dense-analysis/ale'
 Plug 'dracula/vim'
 Plug 'jiangmiao/auto-pairs'
 Plug 'junegunn/fzf', { 'do' : { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
-Plug 'lambdalisue/fern.vim'
 Plug 'kyazdani42/nvim-web-devicons'
+Plug 'lambdalisue/fern.vim'
 Plug 'mhinz/vim-startify'
-Plug 'dense-analysis/ale'
-Plug 'nvim-treesitter/nvim-treesitter'
-Plug 'nvim-orgmode/orgmode'
 Plug 'morhetz/gruvbox'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'nvim-lualine/lualine.nvim'
+Plug 'nvim-orgmode/orgmode'
+Plug 'nvim-treesitter/nvim-treesitter'
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-telescope/telescope.nvim'
 Plug 'omniSharp/omnisharp-vim'
+Plug 'tpope/vim-fugitive'
+Plug 'tpope/vim-commentary'
 Plug 'wcascades/ssgn'
 call plug#end()
 let g:OmniSharp_server_use_net6 = 1
@@ -38,13 +42,22 @@ let g:OmniSharp_selector_findusages = 'fzf'
 let g:ale_linters = {
 \ 'cs': ['OmniSharp']
 \}
+
+" ------------
+" mappings
+" ------------
+
+let mapleader = " "
 map <leader>b :Buffers<CR>
 map <leader>O :Fern .<CR>
 map <leader>s :w<CR>
 vnoremap <C-c> "+y
+noremap! <C-BS> <C-w>
 imap <C-v> <C-r>+
+nmap gd <Plug>(coc-definition)
 nmap <leader>gd <Plug>(coc-definition)
 nmap <leader>gr <Plug>(coc-references)
+nmap <leader>r <Plug>(coc-references)
 nnoremap <C-p> :GFiles<CR>
 map <leader>p <C-p>
 map <leader>h :wincmd h<CR>
@@ -53,16 +66,39 @@ map <leader>k :wincmd k<CR>
 map <leader>l :wincmd l<CR>
 map <leader>tn :SSGNEditGitNote <CR>
 map <leader>tm :SSGNEditMainNote <CR>
-let g:SSGNMainNoteLocation = "~/todo.txt"
+map <C-j> :cn<CR>
+map <C-k> :cp<CR>
+nnoremap <leader>ff <cmd>lua require('telescope.builtin').find_files()<cr>
+nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>
+nnoremap <leader>fb <cmd>lua require('telescope.builtin').buffers()<cr>
+nnoremap <leader>fh <cmd>lua require('telescope.builtin').help_tags()<cr>
+map <leader>cd :cd %:p:h<CR>
+" todo: convert to lua
+nnoremap <expr> <leader>fw ':Telescope find_files<cr>' . "'" . expand('<cword>')
+let g:SSGNMainNoteLocation = "~/todo.txtg"
 
 " Allows for reuse of yanked text
 xnoremap <leader>p "_dP
+" Work around windows suspend issue
+if has("win32") && has("nvim")
+  nnoremap <C-z> <nop>
+  inoremap <C-z> <nop>
+  vnoremap <C-z> <nop>
+  snoremap <C-z> <nop>
+  xnoremap <C-z> <nop>
+  cnoremap <C-z> <nop>
+  onoremap <C-z> <nop>
+endif
+
+" ----------
+"  end mappings
+" ----------
+
 filetype plugin indent on
 " show existing tab with 4 spaces width
-set tabstop=4
+set tabstop=2
 " when indenting with '>', use 4 spaces width
 set shiftwidth=4
-" On pressing tab, insert 4 spaces
 set expandtab
 colorscheme gruvbox
 hi Normal ctermbg=NONE
